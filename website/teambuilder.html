@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Football Team Selector</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            height: 100vh;
+        }
+
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #6a0dad;
+            padding: 15px;
+            border-radius: 15px;
+            margin: 15px 15px 20px 15px;
+        }
+
+        .navbar .logo {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .navbar .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .navbar .nav-links a {
+            padding: 10px 20px;
+            text-decoration: none;
+            color: #fff;
+            background-color: #4b0082;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .navbar .nav-links a.active {
+            background-color: #6a0dad;
+        }
+
+        .navbar .search-bar {
+            background-color: #6a0dad;
+            padding: 5px;
+            border-radius: 10px;
+        }
+
+        .navbar .search-bar input {
+            padding: 5px 10px;
+            border: none;
+            outline: none;
+            border-radius: 5px;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+
+        .formation-pitch-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 100px; 
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            margin-top: 200px;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+
+        .controls label {
+            font-size: 18px;
+            margin-right: 10px;
+        }
+
+        .controls select {
+            padding: 5px;
+            font-size: 16px;
+        }
+
+        .pitch {
+            position: relative;
+            width: 600px;
+            height: 800px; 
+            background-image: url("{{ url_for('static', filename='images/footballpitch.jpg') }}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            border: 2px solid #333;
+            margin-top: 10px;
+            border-radius: 15px;
+            overflow: visible; 
+        }
+
+        .player-container {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;;
+            gap: 10px; 
+            z-index: 1;
+        }
+
+        .player-btn {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background-color: #4b0082;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #fff;
+            font-weight: bold;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s ease, background-color 0.2s ease;
+            cursor: grab;
+        }
+
+        .role-select {
+            padding: 5px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #fff;
+            color: #333;
+            outline: none;
+            width: 100px; 
+            text-align: center;
+            z-index: 2;
+            position: relative;
+            margin-top: -30px;
+        }
+
+        .player-btn:hover {
+            background-color: #6a0dad; 
+            transform: scale(1.1); 
+        }
+
+        .player-btn:active {
+            transform: scale(0.95); 
+            cursor: grabbing;
+        }
+        .remove-btn {
+            position: absolute;
+            top: -10px; 
+            right: -10px; 
+            width: 20px;
+            height: 20px;
+            background-color: #ff4d4d; 
+            border: 1px solid #fff;
+            border-radius: 50%;
+            color: #fff;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.2s ease;
+        }
+
+        .remove-btn:hover {
+            background-color: #ff1a1a; 
+        }
+        .score-counter {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4b0082; 
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .import-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #4b0082;
+            padding: 20px;
+            border: 2px solid #fff;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+        }
+
+        .import-popup-content {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .import-popup-content h3 {
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .import-popup-content label {
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .import-popup-content select {
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 200px;
+        }
+
+        .import-popup-content button {
+            padding: 10px 20px;
+            background-color: #6a0dad;
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .import-popup-content button:hover {
+            background-color: #7b1fa2;
+        }
+
+        .auth-buttons {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .auth-buttons button {
+            padding: 8px 16px;
+            background-color: #4b0082;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .auth-buttons span {
+            color: white;
+            margin-right: 10px;
+        }
+        #autocomplete-dropdown {
+            display: none;
+            position: absolute;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            margin-top: 2px;
+        }
+
+        #autocomplete-dropdown div {
+            padding: 10px 15px;
+            cursor: pointer;
+            color: #333;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+
+        #autocomplete-dropdown div:last-child {
+            border-bottom: none;
+        }
+
+        #autocomplete-dropdown div:hover {
+            background-color: #f0f0f0;
+            color: #6a0dad;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 300px;
+            border-radius: 10px;
+        }
+
+        .close {
+            float: right;
+            cursor: pointer;
+        }
+        .team-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .team-container label {
+            font-size: 18px;
+            margin-right: 10px;
+        }
+
+        .team-container select {
+            padding: 5px;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .team-container button {
+            padding: 8px 15px;
+            background-color: #4b0082;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        .team-container button:hover {
+            background-color: #6a0dad;
+        }
+
+        #deleteTeamBtn {
+            background-color: #d32f2f;
+        }
+
+        #deleteTeamBtn:hover {
+            background-color: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a href="/" class="logo">Data Scout</a>
+        <div class="nav-links">
+            <a href="displayData">Database</a>
+            <a href="teamBuilder">Team Builder</a>
+            <a href="compare">Comparison</a>
+            <a href="account" class="active">Account</a>
+        </div>
+        <div class="search-bar">
+            <form id="search-form">
+                <input type="text" id="player_name" name="player_name" placeholder="Enter player name" autocomplete="off">
+                <div id="autocomplete-dropdown"></div>
+                <button type="submit">Search</button>
+            </form>
+        </div>
+        <div class="auth-buttons">
+            <button id="loginButton">Login/Register</button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div id="authModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Login/Register</h2>
+                <form id="loginForm">
+                    <input type="text" id="loginUsername" placeholder="Username" required>
+                    <input type="password" id="loginPassword" placeholder="Password" required>
+                    <button type="submit">Login</button>
+                </form>
+                <form id="registerForm">
+                    <input type="text" id="registerUsername" placeholder="Username" required>
+                    <input type="password" id="registerPassword" placeholder="Password" required>
+                    <button type="submit">Register</button>
+                </form>
+            </div>
+        </div>
+        <div class="score-counter">
+            <span>Total Squad Score: </span>
+            <span id="totalScore">0</span> 
+        </div>
+        <div class="formation-pitch-container">
+            <div class="controls">
+                <div class="formation-container">
+                    <label for="formation">Choose Formation:</label>
+                    <select id="formation">
+                        <option value="4-4-2">4-4-2</option>
+                        <option value="4-3-3">4-3-3</option>
+                        <option value="3-5-2">3-5-2</option>
+                        <option value="5-3-2">5-3-2</option>
+                    </select>
+                </div>
+                
+                <div class="team-container">
+                    <label for="team-select">Saved Teams:</label>
+                    <select id="team-select">
+                        <option value="">--Select Team--</option>
+                    </select>
+                    <button id="saveTeamBtn">Save Current Team</button>
+                    <button id="deleteTeamBtn">Delete Team</button>
+                </div>
+                
+                <button id="openImportTeamBtn">Import Team</button>
+                <div class="import-popup" id="importPopup">
+                    <div class="import-popup-content">
+                        <h3>Import Team</h3>
+                        <label for="teamSelect">Select Team:</label>
+                        <select id="teamSelect"></select>
+                        <button id="importTeamButton">Import</button>
+                        <button id="closeImportPopup">Close</button>
+                    </div>
+                </div>
+                <button id="saveFormationBtn">Save Formation</button>
+                <div id="delete-formation-container"></div>
+            </div>
+            <div class="pitch" id="pitch"></div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='tbtest.js') }}"></script> 
+</body>
+</html>
+
+
+

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Player Information</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #6a0dad;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .navbar .logo {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .navbar .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .navbar .nav-links a {
+            padding: 10px 20px;
+            text-decoration: none;
+            color: #fff;
+            background-color: #4b0082;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .navbar .nav-links a.active {
+            background-color: #6a0dad;
+        }
+
+        .navbar .search-bar {
+            background-color: #6a0dad;
+            padding: 5px;
+            border-radius: 10px;
+        }
+
+        .navbar .search-bar input {
+            padding: 5px 10px;
+            border: none;
+            outline: none;
+            border-radius: 5px;
+        }
+        .player-info {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow-x: auto;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .dropdown {
+            display: none;
+            position: absolute;
+            background: white;
+            border: 1px solid #ccc;
+            padding: 10px;
+            z-index: 1000;
+        }
+        .dropdown select {
+            width: 100%;
+        }
+        #autocomplete-dropdown {
+            display: none;
+            position: absolute;
+            background-color: #0e0b0b;
+            border: 1px solid #ccc;
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        #autocomplete-dropdown div {
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        #autocomplete-dropdown div:hover {
+            background-color: #484444;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 300px;
+            border-radius: 10px;
+        }
+
+        .close {
+            float: right;
+            cursor: pointer;
+        }
+        .player-actions {
+            display: flex;
+            flex-direction: column;
+            margin: 10px 0 20px 0;
+        }
+
+        .action-btn {
+            background-color: #6a0dad;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 15px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 10px;
+            transition: background-color 0.3s;
+        }
+
+        .action-btn:hover {
+            background-color: #8b28e6;
+        }
+
+        .action-btn.active {
+            background-color: #4CAF50;
+        }
+
+        #shortlist-note-container {
+            margin-top: 10px;
+            display: none;
+        }
+
+        #shortlist-note {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        #save-note-btn {
+            background-color: #4b0082;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 15px;
+            cursor: pointer;
+            float: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a href="/" class="logo">Data Scout</a>
+        <div class="nav-links">
+            <a href="displayData">Database</a>
+            <a href="teamBuilder">Team Builder</a>
+            <a href="compare">Comparison</a>
+            <a href="account" class="active">Account</a>
+        </div>
+        <div class="search-bar">
+            <form id="search-form">
+                <input type="text" id="player_name" name="player_name" placeholder="Enter player name" autocomplete="off">
+                <div id="autocomplete-dropdown"></div>
+                <button type="submit">Search</button>
+            </form>
+        </div>
+        <div class="auth-buttons">
+            <button id="loginButton">Login/Register</button>
+        </div>
+    </div>
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Login/Register</h2>
+            <form id="loginForm">
+                <input type="text" id="loginUsername" placeholder="Username" required>
+                <input type="password" id="loginPassword" placeholder="Password" required>
+                <button type="submit">Login</button>
+            </form>
+            <form id="registerForm">
+                <input type="text" id="registerUsername" placeholder="Username" required>
+                <input type="password" id="registerPassword" placeholder="Password" required>
+                <button type="submit">Register</button>
+            </form>
+        </div>
+    </div>
+    <div class="player-info">
+        <h1 id="player-name">Loading...</h1>
+        <div class="player-actions">
+            <button id="shortlist-btn" class="action-btn">
+                Add to Shortlist
+            </button>
+            <div id="shortlist-note-container" style="display: none;">
+                <textarea id="shortlist-note" placeholder="Add a note about this player (optional)"></textarea>
+                <button id="save-note-btn">Save Note</button>
+            </div>
+        </div>
+        <pre id="player-data">Loading player data...</pre>
+    </div>
+    <select id="preset-select">
+        <option value="preset1">Preset 1</option>
+        <option value="preset2">Preset 2</option>
+        <option value="preset3">Preset 3</option>
+    </select>
+    <button id="edit-button">Edit Columns</button>
+    <div id="chart"></div>
+    <div id="dropdown" class="dropdown">
+        <select id="column-select">
+            <!-- Options will be populated dynamically -->
+        </select>
+        <button id="save-button">Save</button>
+    </div>
+    <script src="{{ url_for('static', filename='player.js') }}"></script>
+</body>
+</html>

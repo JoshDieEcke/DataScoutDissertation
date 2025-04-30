@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Player Comparison</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        /* Navbar Styles */
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #6a0dad;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .navbar .logo {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .navbar .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .navbar .nav-links a {
+            padding: 10px 20px;
+            text-decoration: none;
+            color: #fff;
+            background-color: #4b0082;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .navbar .nav-links a.active {
+            background-color: #6a0dad;
+        }
+
+        .navbar .search-bar {
+            background-color: #6a0dad;
+            padding: 5px;
+            border-radius: 10px;
+        }
+
+        .navbar .search-bar input {
+            padding: 5px 10px;
+            border: none;
+            outline: none;
+            border-radius: 5px;
+        }
+
+        /* Main Content Styles */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #6a0dad;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 20px; 
+            margin-bottom: 20px;
+        }
+
+                
+        .search-box {
+            flex: 1; 
+            display: flex;
+            flex-direction: column; 
+        }
+
+        .search-box label {
+            font-weight: bold;
+            color: #4b0082;
+            margin-bottom: 5px; 
+        }
+
+        .search-box input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 100%;
+        }
+
+        .search-box button {
+            padding: 10px 20px;
+            background-color: #4b0082;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px; 
+        }
+
+        .search-box button:hover {
+            background-color: #6a0dad;
+        }
+
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #6a0dad;
+            color: #fff;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        #comparison-results {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+        }
+        #autocomplete-dropdown {
+            display: none;
+            position: absolute;
+            background-color: #0e0b0b;
+            border: 1px solid #ccc;
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        #autocomplete-dropdown div {
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        #autocomplete-dropdown div:hover {
+            background-color: #484444;
+        }
+        #radar-chart {
+            margin-top: 20px;
+        }
+
+        .stats-controls {
+            margin-top: 20px;
+        }
+
+        .stats-controls label {
+            margin-right: 10px;
+        }
+
+        .stats-controls select, .stats-controls input {
+            margin-right: 10px;
+        }
+
+        #dropdown {
+            display: none;
+            position: absolute;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 12px;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            width: 220px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 300px;
+            border-radius: 10px;
+        }
+
+        .close {
+            float: right;
+            cursor: pointer;
+        }
+        .shortlist-actions {
+            margin-top: 10px;
+        }
+        .view-btn, .shortlist-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 8px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .view-btn {
+            background-color: #4b0082;
+        }
+
+        .shortlist-btn {
+            background-color: #6a0dad;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .shortlist-btn:hover {
+            background-color: #8b28e6;
+        }
+
+        .shortlist-btn.active {
+            background-color: #4CAF50;
+        }
+        #column-select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        #save-button {
+            background-color: #6a0dad;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-weight: bold;
+            float: right;
+        }
+        #save-button:hover {
+            background-color: #8b28e6;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div href="/"  class="logo">Data Scout</div>
+        <div class="nav-links">
+            <a href="displayData">Database</a>
+            <a href="teamBuilder">Team Builder</a>
+            <a href="compare">Comparison</a>
+            <a href="account" class="active">Account</a>
+        </div>
+        <div class="search-bar">
+            <form id="search-form">
+                <input type="text" id="player_name" name="player_name" placeholder="Enter player name" autocomplete="off">
+                <div id="autocomplete-dropdown"></div>
+                <button type="submit">Search</button>
+            </form>          
+        </div>
+        <div class="auth-buttons">
+            <button id="loginButton">Login/Register</button>
+        </div>
+    </div>
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Login/Register</h2>
+            <form id="loginForm">
+                <input type="text" id="loginUsername" placeholder="Username" required>
+                <input type="password" id="loginPassword" placeholder="Password" required>
+                <button type="submit">Login</button>
+            </form>
+            <form id="registerForm">
+                <input type="text" id="registerUsername" placeholder="Username" required>
+                <input type="password" id="registerPassword" placeholder="Password" required>
+                <button type="submit">Register</button>
+            </form>
+        </div>
+    </div>
+    <h1>Player Comparison Tool</h1>
+    <div class="container">
+        <div class="search-container">
+            <div class="search-box">
+                <label for="player1">Player 1:</label>
+                <input type="text" id="player1" placeholder="Enter player name" list="player1-list" oninput="updatePlayerList('player1')">
+                <datalist id="player1-list"></datalist>
+                <div id="player1-results" class="results"></div>
+                <div class="player-actions" id="player1-actions" style="display: none; margin-top: 10px;">
+                    <button id="view-player1" class="view-btn">View Player</button>
+                    <button id="shortlist-player1" class="shortlist-btn">Add to Shortlist</button>
+                </div>             
+            </div>
+            <div class="search-box">
+                <label for="player2">Player 2:</label>
+                <input type="text" id="player2" placeholder="Enter player name" list="player2-list" oninput="updatePlayerList('player2')">
+                <datalist id="player2-list"></datalist>
+                <div id="player2-results" class="results"></div>
+                <div class="player-actions" id="player2-actions" style="display: none; margin-top: 10px;">
+                    <button id="view-player2" class="view-btn">View Player</button>
+                    <button id="shortlist-player2" class="shortlist-btn">Add to Shortlist</button>
+                </div>
+            </div>
+        </div>
+        <div class="search-box">
+            <label for="role">Select Role:</label>
+            <select id="role">
+                <option value="">--Select Role--</option>
+            </select>
+            <button onclick="comparePlayers()">Compare</button>
+        </div>
+    
+        <div id="comparison-results"></div>
+        <div class="stats-controls">
+            <label for="preset-select">Select Preset:</label>
+            <select id="preset-select" onchange="updatePreset()">
+                <option value="preset1">Preset 1</option>
+                <option value="preset2">Preset 2</option>
+                <option value="preset3">Preset 3</option>
+            </select>
+            <button id="edit-button">Edit Stats</button>
+        </div>
+        <div id="radar-chart"></div>
+        <div id="dropdown">
+            <select id="column-select"></select>
+            <button id="save-button">Save</button>
+        </div>
+    </div>
+
+    
+
+    <script>
+        // Get the modal and buttons
+        const authModal = document.getElementById("authModal");
+        const loginButton = document.getElementById("loginButton");
+        const closeButton = document.querySelector(".close");
+
+        // Show the modal when the login button is clicked
+        loginButton.addEventListener("click", () => {
+            authModal.style.display = "block";
+        });
+
+        // Hide the modal when the close button is clicked
+        closeButton.addEventListener("click", () => {
+            authModal.style.display = "none";
+        });
+
+        // Hide the modal when clicking outside of it
+        window.addEventListener("click", (event) => {
+            if (event.target === authModal) {
+                authModal.style.display = "none";
+            }
+        });
+
+        // Handle login form submission
+        document.getElementById("loginForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const username = document.getElementById("loginUsername").value;
+            const password = document.getElementById("loginPassword").value;
+
+            const response = await fetch("/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password }),
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                alert("Login successful!");
+                authModal.style.display = "none";
+                updateUIForLoggedInUser(data.username); 
+            } else {
+                alert(data.error);
+            }
+        });
+
+        // Handle register form submission
+        document.getElementById("registerForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const username = document.getElementById("registerUsername").value;
+            const password = document.getElementById("registerPassword").value;
+
+            const response = await fetch("/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password }),
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                alert("Registration successful!");
+                authModal.style.display = "none";
+            } else {
+                alert(data.error);
+            }
+        });
+
+        // Update UI for logged-in user
+        function updateUIForLoggedInUser(username) {
+            const authButtons = document.querySelector(".auth-buttons");
+            authButtons.innerHTML = `
+                <span>Welcome, ${username}</span>
+                <button id="logoutButton">Logout</button>
+            `;
+
+            document.getElementById("logoutButton").addEventListener("click", async () => {
+                const response = await fetch("/logout", { method: "POST" });
+                if (response.ok) {
+                    alert("Logged out successfully!");
+                    window.location.reload();
+                }
+            });
+        }
+        // Variables to store current players
+        let currentPlayer1 = null;
+        let currentPlayer2 = null;
+
+        // Function to check if a player is already in the shortlist
+        async function checkIfShortlisted(playerName, buttonId) {
+            const button = document.getElementById(buttonId);
+            if (!button) return;
+            
+            try {
+                const response = await fetch(`/check-shortlisted?player_name=${encodeURIComponent(playerName)}`);
+                if (!response.ok) {
+                    console.error('Failed to check shortlist status');
+                    return;
+                }
+                
+                const data = await response.json();
+                
+                if (data.is_shortlisted) {
+                    button.textContent = 'Remove from Shortlist';
+                    button.style.backgroundColor = '#4CAF50'; 
+                    button.classList.add('active');
+                } else {
+                    button.textContent = 'Add to Shortlist';
+                    button.style.backgroundColor = '#6a0dad'; 
+                    button.classList.remove('active');
+                }
+            } catch (error) {
+                console.error('Error checking shortlist status:', error);
+            }
+        }
+
+        // Function to toggle shortlist status
+        async function toggleShortlist(playerName, buttonId) {
+            const button = document.getElementById(buttonId);
+            if (!button) return;
+            
+            const isRemoving = button.classList.contains('active');
+            
+            try {
+                const response = await fetch(isRemoving ? '/remove-from-shortlist' : '/add-to-shortlist', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ player_name: playerName })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to update shortlist');
+                }
+                
+                const data = await response.json();
+                
+                if (isRemoving) {
+                    button.textContent = 'Add to Shortlist';
+                    button.style.backgroundColor = '#6a0dad'; 
+                    button.classList.remove('active');
+                } else {
+                    button.textContent = 'Remove from Shortlist';
+                    button.style.backgroundColor = '#4CAF50'; 
+                    button.classList.add('active');
+                }
+
+                alert(data.message);
+                
+            } catch (error) {
+                console.error('Error updating shortlist:', error);
+                alert('Error updating shortlist. Please try again.');
+            }
+        }
+
+        // Function to view player details
+        function viewPlayer(playerName) {
+            if (playerName) {
+                window.location.href = `playerPage?name=${encodeURIComponent(playerName)}`;
+            }
+        }
+
+        // Check login state on page load
+        async function checkLoginState() {
+            const response = await fetch("/check-login", { method: "GET" });
+            if (response.ok) {
+                const data = await response.json();
+                if (data.logged_in) {
+                    updateUIForLoggedInUser(data.username);
+                }
+            }
+        }
+
+
+        // Run checkLoginState when the page loads
+        document.addEventListener("DOMContentLoaded", () => {
+            checkLoginState();
+            fetchAllRoles();
+            fetch('/check-login')
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.logged_in) {
+                        // Hide shortlist buttons if user is not logged in
+                        document.getElementById('shortlist-player1').style.display = 'none';
+                        document.getElementById('shortlist-player2').style.display = 'none';
+                    }
+                })
+                .catch(error => console.error('Error checking login status:', error));
+
+            // Add event listeners for shortlist buttons
+            document.getElementById('shortlist-player1').addEventListener('click', function() {
+                if (currentPlayer1) {
+                    toggleShortlist(currentPlayer1, 'shortlist-player1');
+                }
+            });
+
+            document.getElementById('shortlist-player2').addEventListener('click', function() {
+                if (currentPlayer2) {
+                    toggleShortlist(currentPlayer2, 'shortlist-player2');
+                }
+            });
+            document.getElementById('view-player1').addEventListener('click', function() {
+                viewPlayer(currentPlayer1);
+            });
+
+            document.getElementById('view-player2').addEventListener('click', function() {
+                viewPlayer(currentPlayer2);
+            });
+        });
+
+        function updatePlayerList(inputId) {
+            const input = document.getElementById(inputId);
+            const datalist = document.getElementById(`${inputId}-list`);
+            const searchTerm = input.value.toLowerCase();
+
+            if (searchTerm.length < 2) {
+                datalist.innerHTML = ''; 
+                return;
+            }
+
+            // Fetch player names that start with the search term
+            fetch(`http://127.0.0.1:5000/players?starts_with=${encodeURIComponent(searchTerm)}`)
+                .then(response => response.json())
+                .then(players => {
+                    datalist.innerHTML = ''; 
+                    players.forEach(player => {
+                        const option = document.createElement('option');
+                        option.value = player;
+                        datalist.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching player list:', error);
+                });
+        }
+
+        // Search Form Event Listener
+        const searchForm = document.getElementById("search-form");
+        const playerNameInput = document.getElementById("player_name");
+        const autocompleteDropdown = document.getElementById("autocomplete-dropdown");
+        
+        if (searchForm && playerNameInput && autocompleteDropdown) {
+            // Function to fetch player names from the backend
+            async function fetchPlayerNames(searchTerm) {
+                try {
+                    const response = await fetch(`http://127.0.0.1:5000/players?starts_with=${encodeURIComponent(searchTerm)}`);
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    const data = await response.json();
+                    return data; 
+                } catch (error) {
+                    console.error('Error fetching player names:', error);
+                    return [];
+                }
+            }
+        
+            // Function to display the autocomplete dropdown
+            function showAutocompleteDropdown(names) {
+                autocompleteDropdown.innerHTML = ''; 
+                if (names.length > 0) {
+                    names.forEach(name => {
+                        const div = document.createElement('div');
+                        div.textContent = name;
+                        div.addEventListener('click', () => {
+                            playerNameInput.value = name;
+                            autocompleteDropdown.innerHTML = ''; 
+                        });
+                        autocompleteDropdown.appendChild(div);
+                    });
+                    autocompleteDropdown.style.display = 'block';
+                } else {
+                    autocompleteDropdown.style.display = 'none';
+                }
+            }
+        
+            // Event listener for input changes
+            playerNameInput.addEventListener('input', async function () {
+                const searchTerm = this.value.trim().toLowerCase();
+                if (searchTerm.length > 0) {
+                    const playerNames = await fetchPlayerNames(searchTerm);
+                    showAutocompleteDropdown(playerNames);
+                } else {
+                    autocompleteDropdown.style.display = 'none';
+                }
+            });
+        
+            // Event listener for form submission
+            searchForm.addEventListener('submit', function (e) {
+                e.preventDefault(); 
+                
+                const playerName = playerNameInput.value.trim();
+                if (playerName) {
+                    // Redirect to player.html with the player's name as a query parameter
+                    window.location.href = `playerPage?name=${encodeURIComponent(playerName)}`;
+                }
+            });
+        
+            // Hide dropdown when clicking outside
+            document.addEventListener('click', function (e) {
+                if (!autocompleteDropdown.contains(e.target) && e.target !== playerNameInput) {
+                    autocompleteDropdown.style.display = 'none';
+                }
+            });
+        }
+
+        const columns = ["Key Passes", "Pass Completion %", "xA: Expected Assists", "xAG: Exp. Assisted Goals", "SCA (Live-ball Pass)", "GCA (Live-ball Pass)", "Touches", "Progressive Passes"];
+
+        const presets = {
+            preset1: ["Key Passes", "Pass Completion %", "xA: Expected Assists", "xAG: Exp. Assisted Goals", "SCA (Live-ball Pass)", "GCA (Live-ball Pass)", "Touches", "Progressive Passes"],
+            preset2: ["Shots", "Shots on Target", "Goals", "Assists", "xG: Expected Goals", "xAG: Exp. Assisted Goals", "Dribbles", "Touches"],
+            preset3: ["Tackles", "Interceptions", "Clearances", "Blocks", "Aerials Won", "Passes", "Pass Completion %", "Progressive Passes"],
+        };
+
+        let currentColumns = [...columns]; 
+        let selectedSegmentIndex = null; 
+        let player1Data = null; 
+        let player2Data = null; 
+
+        function fetchAllRoles() {
+            fetch('/get-all-roles')
+                .then(response => response.json())
+                .then(groupedRoles => {
+                    console.log("Grouped roles loaded:", groupedRoles);
+                    
+                    const roleSelect = document.getElementById('role');
+                    roleSelect.innerHTML = '<option value="">--Select Role--</option>';
+    
+                    for (const group in groupedRoles) {
+                        if (groupedRoles[group] && groupedRoles[group].length > 0) {
+                            const optgroup = document.createElement("optgroup");
+                            optgroup.label = group;
+                            
+                            groupedRoles[group].forEach(role => {
+                                const option = document.createElement("option");
+                                option.value = role;
+                                option.textContent = role;
+                                optgroup.appendChild(option);
+                            });
+                            
+                            roleSelect.appendChild(optgroup);
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error("Error fetching roles:", error);
+
+                    fetch('http://127.0.0.1:5000/roles')
+                        .then(response => response.json())
+                        .then(roles => {
+                            const roleSelect = document.getElementById('role');
+                            roles.forEach(role => {
+                                const option = document.createElement('option');
+                                option.value = role;
+                                option.textContent = role;
+                                roleSelect.appendChild(option);
+                            });
+                        })
+                        .catch(error => {
+                            console.error('Error fetching roles:', error);
+                        });
+                });
+        }
+
+        // Function to search for a player
+        function searchPlayer(playerId) {
+            const playerName = document.getElementById(playerId).value;
+            if (!playerName) {
+                alert('Please enter a player name');
+                return;
+            }
+
+            fetch(`http://127.0.0.1:5000/player/${encodeURIComponent(playerName)}`)
+                .then(response => response.json())
+                .then(data => {
+                    const resultsDiv = document.getElementById(`${playerId}-results`);
+                    if (data.error) {
+                        resultsDiv.innerHTML = `<p>${data.error}</p>`;
+                        const shortlistBtnId = playerId === 'player1' ? 'shortlist-player1' : 'shortlist-player2';
+                        document.getElementById(shortlistBtnId).style.display = 'none';
+                    } else {
+                        resultsDiv.innerHTML = `
+                            <p><strong>Player:</strong> ${data.Player}</p>
+                            <p><strong>Best Role:</strong> ${data.BestRole}</p>
+                            <p><strong>Score:</strong> ${data.Score}</p>
+                            <p><strong>Rank:</strong> ${data.Rank}</p>
+                        `;
+                        
+                        // Store current player
+                        if (playerId === 'player1') {
+                            currentPlayer1 = data.Player;
+                            document.getElementById('player1-actions').style.display = 'block';
+                            checkIfShortlisted(currentPlayer1, 'shortlist-player1');
+                        } else {
+                            currentPlayer2 = data.Player;
+                            document.getElementById('player2-actions').style.display = 'block';
+                            checkIfShortlisted(currentPlayer2, 'shortlist-player2');
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        // Function to compare two players
+        function comparePlayers() {
+            const player1 = document.getElementById('player1').value;
+            const player2 = document.getElementById('player2').value;
+            const role = document.getElementById('role').value;
+
+            if (!player1 || !player2 || !role) {
+                alert('Please fill in both player names and select a role');
+                return;
+            }
+
+            // Fetch player 1's score and rank
+            fetch(`http://127.0.0.1:5000/player_score?player_name=${encodeURIComponent(player1)}&role=${encodeURIComponent(role)}`)
+                .then(response => response.json())
+                .then(data1 => {
+                    // Fetch player 2's score and rank
+                    fetch(`http://127.0.0.1:5000/player_score?player_name=${encodeURIComponent(player2)}&role=${encodeURIComponent(role)}`)
+                        .then(response => response.json())
+                        .then(data2 => {
+                            const comparisonResults = document.getElementById('comparison-results');
+                            if (data1.error || data2.error) {
+                                comparisonResults.innerHTML = `<p>Error: ${data1.error || data2.error}</p>`;
+                            } else {
+                                // Store the current players
+                                currentPlayer1 = data1.Player;
+                                currentPlayer2 = data2.Player;
+
+                                const score1 = parseFloat(data1.Score).toFixed(2);
+                                const score2 = parseFloat(data2.Score).toFixed(2);
+                                
+                                comparisonResults.innerHTML = `
+                                    <h2>Comparison Results</h2>
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Stat</th>
+                                                <th>${data1.Player}</th>
+                                                <th>${data2.Player}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>Score</td>
+                                                <td>${score1}</td>
+                                                <td>${score2}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Rank</td>
+                                                <td>${data1.Rank}</td>
+                                                <td>${data2.Rank}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Actions</td>
+                                                <td>
+                                                    <button onclick="viewPlayer('${data1.Player}')" class="view-btn">View Player</button>
+                                                    <button id="compare-shortlist-player1" class="shortlist-btn" onclick="toggleShortlist('${data1.Player}', 'compare-shortlist-player1')">Add to Shortlist</button>
+                                                </td>
+                                                <td>
+                                                    <button onclick="viewPlayer('${data2.Player}')" class="view-btn">View Player</button>
+                                                    <button id="compare-shortlist-player2" class="shortlist-btn" onclick="toggleShortlist('${data2.Player}', 'compare-shortlist-player2')">Add to Shortlist</button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                `;
+ 
+                                checkIfShortlisted(data1.Player, 'compare-shortlist-player1');
+                                checkIfShortlisted(data2.Player, 'compare-shortlist-player2');
+                                
+                                fetchPlayerStats(player1, player2, currentColumns);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error fetching player 2 data:', error);
+                        });
+                })
+                .catch(error => {
+                    console.error('Error fetching player 1 data:', error);
+                });
+        }
+
+        function fetchPlayerStats(player1, player2, columns) {
+            Promise.all([
+                fetchPlayerPercentiles(player1, columns),
+                fetchPlayerPercentiles(player2, columns)
+            ]).then(([player1Percentiles, player2Percentiles]) => {
+                player1Data = player1Percentiles;
+                player2Data = player2Percentiles;
+                createRadialBarChart(currentColumns, player1Percentiles, player2Percentiles);
+            });
+        }
+        function fetchPlayerPercentiles(name, columns) {
+            return Promise.all(columns.map(column =>
+                fetch(`http://127.0.0.1:5000/player_percentile?player_name=${encodeURIComponent(name)}&column=${encodeURIComponent(column)}`)
+                    .then(response => response.json())
+            )).then(data => data.map(d => d.Percentile));
+        }
+
+
+        function createRadialBarChart(labels, player1Percentiles, player2Percentiles) {
+            
+            const player1Name = document.getElementById('player1').value;
+            const player2Name = document.getElementById('player2').value;
+            
+            const chartData = [
+                {
+                    type: "scatterpolar",
+                    r: player1Percentiles,
+                    theta: labels,
+                    fill: "toself",
+                    name: player1Name,
+                    line: {
+                        color: "rgba(0, 123, 255, 0.8)"
+                    },
+                    fillcolor: "rgba(0, 123, 255, 0.2)"
+                },
+                {
+                    type: "scatterpolar",
+                    r: player2Percentiles,
+                    theta: labels,
+                    fill: "toself",
+                    name: player2Name,
+                    line: {
+                        color: "rgba(255, 99, 132, 0.8)"
+                    },
+                    fillcolor: "rgba(255, 99, 132, 0.2)"
+                }
+            ];
+
+            const layout = {
+                polar: {
+                    radialaxis: {
+                        visible: true,
+                        range: [0, 100]
+                    }
+                },
+                showlegend: true
+            };
+
+            Plotly.newPlot("radar-chart", chartData, layout).then(() => {
+                // Add click event listeners to each segment
+                const chart = document.getElementById("radar-chart");
+                chart.on("plotly_click", (data) => {
+                    const pointIndex = data.points[0].pointNumber;
+                    selectedSegmentIndex = pointIndex;
+                    showDropdown(data.event.clientX, data.event.clientY);
+                });
+            });
+        }
+
+        // Update the chart based on the selected preset
+        function updatePreset() {
+            const selectedPreset = document.getElementById("preset-select").value;
+            currentColumns = [...presets[selectedPreset]];
+            if (player1Data && player2Data) {
+                createRadialBarChart(currentColumns, player1Data, player2Data);
+            }
+        }
+
+        // Fetch all columns for the dropdown
+        function fetchAllColumns() {
+            return fetch("http://127.0.0.1:5000/all_columns")
+                .then(response => response.json())
+                .catch(error => {
+                    console.error("Error fetching all columns:", error);
+                    return [];
+                });
+        }
+
+        // Show the dropdown and populate it with all columns
+        function showDropdown(x, y) {
+            const dropdown = document.getElementById("dropdown");
+
+            const windowHeight = window.innerHeight;
+            const windowWidth = window.innerWidth;
+    
+            let posX = x;
+            let posY = y;
+      
+            const dropdownWidth = 200; 
+            const dropdownHeight = 100; 
+  
+            if (posX + dropdownWidth > windowWidth) {
+                posX = windowWidth - dropdownWidth - 20;
+            }
+
+            posY = Math.max(120, posY - dropdownHeight - 10);
+      
+            dropdown.style.display = "block";
+            dropdown.style.left = `${posX}px`;
+            dropdown.style.top = `${posY}px`;
+     
+            dropdown.style.backgroundColor = "#fff";
+            dropdown.style.border = "1px solid #ccc";
+            dropdown.style.borderRadius = "5px";
+            dropdown.style.padding = "10px";
+            dropdown.style.boxShadow = "0 2px 5px rgba(0,0,0,0.2)";
+            dropdown.style.width = "200px";
+
+            fetchAllColumns().then(allColumns => {
+                const columnSelect = document.getElementById("column-select");
+                columnSelect.innerHTML = allColumns.map(column =>
+                    `<option value="${column}">${column}</option>`
+                ).join("");
+
+                if (currentColumns[selectedSegmentIndex]) {
+                    for (let i = 0; i < columnSelect.options.length; i++) {
+                        if (columnSelect.options[i].value === currentColumns[selectedSegmentIndex]) {
+                            columnSelect.selectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+
+                const saveButton = document.getElementById("save-button");
+                const newSaveButton = saveButton.cloneNode(true);
+                saveButton.parentNode.replaceChild(newSaveButton, saveButton);
+   
+                document.getElementById("save-button").addEventListener("click", () => {
+                    const selectedColumn = columnSelect.value;
+                    if (selectedColumn) {
+                        currentColumns[selectedSegmentIndex] = selectedColumn;
+                        if (player1Data && player2Data) {
+                            createRadialBarChart(currentColumns, player1Data, player2Data);
+                        }
+                        dropdown.style.display = "none";
+                    }
+                });
+            });
+        }
+
+        document.getElementById("edit-button").addEventListener("click", () => {
+            alert("Click on any segment to edit its column.");
+        });
+    </script>
+</body>
+</html>

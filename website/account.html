@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account - Data Scout</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='account.css') }}">
+</head>
+<body>
+    <div class="navbar">
+        <a href="/" class="logo">Data Scout</a>
+        <div class="nav-links">
+            <a href="displayData">Database</a>
+            <a href="teamBuilder">Team Builder</a>
+            <a href="compare">Comparison</a>
+            <a href="account" class="active">Account</a>
+        </div>
+        <div class="search-bar">
+            <form id="search-form">
+                <input type="text" id="player_name" name="player_name" placeholder="Enter player name" autocomplete="off">
+                <div id="autocomplete-dropdown"></div>
+                <button type="submit">Search</button>
+            </form>
+        </div>
+        <div class="auth-buttons">
+            <button id="loginButton">Login/Register</button>
+        </div>
+    </div>
+
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Login/Register</h2>
+            <form id="loginForm">
+                <input type="text" id="loginUsername" placeholder="Username" required>
+                <input type="password" id="loginPassword" placeholder="Password" required>
+                <button type="submit">Login</button>
+            </form>
+            <form id="registerForm">
+                <input type="text" id="registerUsername" placeholder="Username" required>
+                <input type="password" id="registerPassword" placeholder="Password" required>
+                <button type="submit">Register</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="account-header">
+            <h1>My Account</h1>
+            <button class="settings-btn">
+                <i>⚙️</i> Account Settings
+            </button>
+        </div>
+
+        <div class="account-info">
+            <h2 id="username-display">Welcome, User</h2>
+            <p>Manage your saved formations, teams, and shortlisted players all in one place.</p>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="formations">Formations</div>
+            <div class="tab" data-tab="teams">Teams</div>
+            <div class="tab" data-tab="shortlist">Player Shortlist</div>
+            <div class="tab" data-tab="custom-roles">Custom Roles</div>
+        </div>
+
+        <div id="roleCreatorModal" class="modal">
+            <div class="modal-content" style="width: 600px; max-width: 90%;">
+                <span class="close" id="closeRoleModal">&times;</span>
+                <h2>Create Custom Role</h2>
+                
+                <div class="role-creator-form">
+                    <div class="form-group">
+                        <label for="role-name">Role Name:</label>
+                        <input type="text" id="role-name" placeholder="Enter a name for your custom role" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="role-position">Position Category:</label>
+                        <select id="role-position" required>
+                            <option value="">Select a position category</option>
+                            <optgroup label="Goalkeeper">
+                                <option value="GK">Goalkeeper (GK)</option>
+                            </optgroup>
+                            <optgroup label="Defenders">
+                                <option value="CB">Center Back (CB)</option>
+                                <option value="LB">Left Back (LB)</option>
+                                <option value="RB">Right Back (RB)</option>
+                                <option value="LWB">Left Wing Back (LWB)</option>
+                                <option value="RWB">Right Wing Back (RWB)</option>
+                            </optgroup>
+                            <optgroup label="Midfielders">
+                                <option value="CM">Central Midfielder (CM)</option>
+                                <option value="CDM">Defensive Midfielder (CDM)</option>
+                                <option value="CAM">Attacking Midfielder (CAM)</option>
+                                <option value="LM">Left Midfielder (LM)</option>
+                                <option value="RM">Right Midfielder (RM)</option>
+                            </optgroup>
+                            <optgroup label="Attackers">
+                                <option value="ST">Striker (ST)</option>
+                                <option value="LW">Left Winger (LW)</option>
+                                <option value="RW">Right Winger (RW)</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="role-group">Role Group:</label>
+                        <select id="role-group" required>
+                            <option value="">Select where this role should appear</option>
+                            <option value="Defenders">Defenders</option>
+                            <option value="Midfielders">Midfielders</option>
+                            <option value="Attackers">Attackers</option>
+                        </select>
+                    </div>
+                    
+                    <div class="columns-container">
+                        <h3>Select Statistics and Weights</h3>
+                        <p class="help-text">Choose which statistics should be considered for this role and their importance.</p>
+                        
+                        <div class="column-filters">
+                            <select id="column-category-filter">
+                                <option value="all">All Categories</option>
+                                <option value="basic">Basic Info</option>
+                                <option value="discipline">Discipline</option>
+                                <option value="shooting">Shooting</option>
+                                <option value="passing">Passing</option>
+                                <option value="defensive">Defensive Actions</option>
+                                <option value="dribbling">Dribbling</option>
+                            </select>
+                            <input type="text" id="column-search" placeholder="Search for stats...">
+                        </div>
+                        
+                        <div class="columns-list">
+                            <!-- Columns will be added here -->
+                        </div>
+                        
+                        <div class="selected-columns">
+                            <h4>Selected Statistics</h4>
+                            <div id="selected-columns-list">
+                                <div class="empty-selection">No statistics selected yet.</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button id="save-role-btn" class="primary-btn">Save Custom Role</button>
+                        <button id="cancel-role-btn" class="secondary-btn">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="formations" class="tab-content active">
+            <div id="formations-grid" class="grid">
+                <!-- Formations will be loaded here -->
+                <div class="empty-message">No formations saved yet. Create a formation in the Team Builder.</div>
+            </div>
+        </div>
+
+        <div id="teams" class="tab-content">
+            <div id="teams-grid" class="grid">
+                <!-- Teams will be loaded here -->
+                <div class="empty-message">No teams saved yet. Create a team in the Team Builder.</div>
+            </div>
+        </div>
+
+        <div id="shortlist" class="tab-content">
+            <div class="shortlist-controls">
+                <div class="search-filters">
+                    <input type="text" id="shortlist-search" placeholder="Search players...">
+                    <select id="shortlist-role-filter">
+                        <option value="">All Roles</option>
+                        <!-- Roles will be loaded here -->
+                    </select>
+                    <select id="shortlist-team-filter">
+                        <option value="">All Teams</option>
+                        <!-- Teams will be loaded here -->
+                    </select>
+                    <button id="reset-shortlist-filters">Reset Filters</button>
+                </div>
+            </div>
+        
+            <div class="shortlist-table-container">
+                <table id="shortlist-table">
+                    <thead>
+                        <tr>
+                            <th>Player</th>
+                            <th>Position</th>
+                            <th>Team</th>
+                            <th>League</th>
+                            <th>Age</th>
+                            <th>Best Role</th>
+                            <th>Note</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="shortlist-tbody">
+                        <!-- Players will be loaded here -->
+                    </tbody>
+                </table>
+                <div id="shortlist-empty-message" class="empty-message">
+                    Your shortlist is empty. Add players from their player profiles or the database page.
+                </div>
+            </div>
+        
+            <div class="pagination">
+                <button id="shortlist-prev-page">Previous</button>
+                <span id="shortlist-page-info">Page 1 of 1</span>
+                <button id="shortlist-next-page">Next</button>
+            </div>
+        
+            <!-- Note Edit Modal -->
+            <div id="note-modal" class="modal">
+                <div class="modal-content">
+                    <span class="close-note-modal">&times;</span>
+                    <h3>Edit Note</h3>
+                    <input type="hidden" id="note-player-name">
+                    <textarea id="player-note" rows="4" placeholder="Add notes about this player..."></textarea>
+                    <button id="save-note">Save Note</button>
+                </div>
+            </div>
+        </div>
+        <div id="custom-roles" class="tab-content">
+            <div class="custom-roles-header">
+                <h2>My Custom Roles</h2>
+                <button id="create-role-btn" class="primary-btn">Create New Role</button>
+            </div>
+            
+            <div id="custom-roles-list" class="grid">
+                <!-- Custom roles will be loaded here -->
+                <div class="empty-message">No custom roles created yet. Click "Create New Role" to get started.</div>
+            </div>
+        </div>        
+    </div>
+
+    <script>
+        // Get the modal and buttons
+        const authModal = document.getElementById("authModal");
+        const loginButton = document.getElementById("loginButton");
+        const closeButton = document.querySelector(".close");
+
+        // Show the modal when the login button is clicked
+        loginButton.addEventListener("click", () => {
+            authModal.style.display = "block";
+        });
+
+        // Hide the modal when the close button is clicked
+        closeButton.addEventListener("click", () => {
+            authModal.style.display = "none";
+        });
+
+        // Hide the modal when clicking outside of it
+        window.addEventListener("click", (event) => {
+            if (event.target === authModal) {
+                authModal.style.display = "none";
+            }
+        });
+
+        // Handle login form submission
+        document.getElementById("loginForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const username = document.getElementById("loginUsername").value;
+            const password = document.getElementById("loginPassword").value;
+
+            const response = await fetch("/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password }),
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                alert("Login successful!");
+                authModal.style.display = "none";
+                updateUIForLoggedInUser(data.username);
+                loadUserData(); 
+            } else {
+                alert(data.error);
+            }
+        });
+
+        // Handle register form submission
+        document.getElementById("registerForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const username = document.getElementById("registerUsername").value;
+            const password = document.getElementById("registerPassword").value;
+
+            const response = await fetch("/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password }),
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                alert("Registration successful!");
+                authModal.style.display = "none";
+            } else {
+                alert(data.error);
+            }
+        });
+
+        // Update UI for logged-in user
+        function updateUIForLoggedInUser(username) {
+            const authButtons = document.querySelector(".auth-buttons");
+            authButtons.innerHTML = `
+                <span>Welcome, ${username}</span>
+                <button id="logoutButton">Logout</button>
+            `;
+
+            document.getElementById("username-display").textContent = `Welcome, ${username}`;
+
+            document.getElementById("logoutButton").addEventListener("click", async () => {
+                const response = await fetch("/logout", { method: "POST" });
+                if (response.ok) {
+                    alert("Logged out successfully!");
+                    window.location.reload(); 
+                }
+            });
+        }
+
+        // Check login state on page load
+        async function checkLoginState() {
+            const response = await fetch("/check-login", { method: "GET" });
+            if (response.ok) {
+                const data = await response.json();
+                if (data.logged_in) {
+                    updateUIForLoggedInUser(data.username);
+                    loadUserData(); 
+                } else {
+                    window.location.href = "/";
+                }
+            }
+        }
+
+        // Load user's saved formations and teams
+        async function loadUserData() {
+            await Promise.all([
+                loadFormations(),
+                loadTeams()
+            ]);
+        }
+
+        // Load user's saved formations
+        async function loadFormations() {
+            try {
+                const response = await fetch("/get-formations");
+                if (!response.ok) {
+                    throw new Error('Failed to fetch formations');
+                }
+
+                const formations = await response.json();
+                const formationsGrid = document.getElementById("formations-grid");
+
+                if (formations.length === 0) {
+                    formationsGrid.innerHTML = `
+                        <div class="empty-message">No formations saved yet. Create a formation in the Team Builder.</div>
+                    `;
+                    return;
+                }
+
+                formationsGrid.innerHTML = '';
+
+                // Add each formation as a card
+                formations.forEach(formation => {
+                    const formationCard = document.createElement('div');
+                    formationCard.className = 'card';
+                    formationCard.innerHTML = `
+                        <h3>${formation.name}</h3>
+                        <div class="pitch-preview"></div>
+                        <div class="card-info">
+                            <p>${formation.players.length} players</p>
+                        </div>
+                        <div class="card-actions">
+                            <button class="view-btn" onclick="viewFormation('${formation.name}')">View</button>
+                            <button class="delete-btn" onclick="deleteFormation('${formation.name}')">Delete</button>
+                        </div>
+                    `;
+                    formationsGrid.appendChild(formationCard);
+                });
+            } catch (error) {
+                console.error('Error loading formations:', error);
+            }
+        }
+
+        // Load user's saved teams
+        async function loadTeams() {
+            try {
+                const response = await fetch("/get-teams");
+                if (!response.ok) {
+                    throw new Error('Failed to fetch teams');
+                }
+
+                const teams = await response.json();
+                const teamsGrid = document.getElementById("teams-grid");
+
+                if (teams.length === 0) {
+                    teamsGrid.innerHTML = `
+                        <div class="empty-message">No teams saved yet. Create a team in the Team Builder.</div>
+                    `;
+                    return;
+                }
+
+                teamsGrid.innerHTML = '';
+
+                console.log("Received teams data:", teams);
+
+                // Add each team as a card
+                teams.forEach(team => {
+                    let teamName;
+                    if (typeof team === 'string') {
+                        teamName = team;
+                    } else if (typeof team === 'object' && team !== null) {
+                        teamName = team.name || JSON.stringify(team);
+                    } else {
+                        teamName = String(team);
+                    }
+                    
+                    const teamCard = document.createElement('div');
+                    teamCard.className = 'card';
+                    
+                    console.log(`Processing team: ${teamName}, type: ${typeof team}`);
+                    
+                    // Fetch additional team details
+                    fetch(`/get-team?name=${encodeURIComponent(teamName)}`)
+                        .then(response => response.json())
+                        .then(teamDetails => {
+                            console.log(`Team details for ${teamName}:`, teamDetails);
+                            
+                            if (teamDetails.error) {
+                                throw new Error(teamDetails.error);
+                            }
+                            
+                            teamCard.innerHTML = `
+                                <h3>${teamName}</h3>
+                                <div class="pitch-preview"></div>
+                                <div class="card-info">
+                                    <p>Formation: ${teamDetails.formation_name || 'Custom'}</p>
+                                    <p>Score: ${teamDetails.total_score ? teamDetails.total_score.toFixed(2) : 'N/A'}</p>
+                                </div>
+                                <div class="card-actions">
+                                    <button class="view-btn" onclick="viewTeam('${teamName}')">View</button>
+                                    <button class="delete-btn" onclick="deleteTeam('${teamName}')">Delete</button>
+                                </div>
+                            `;
+                        })
+                        .catch(error => {
+                            console.error(`Error fetching details for team ${teamName}:`, error);
+                            teamCard.innerHTML = `
+                                <h3>${teamName}</h3>
+                                <div class="pitch-preview"></div>
+                                <div class="card-info">
+                                    <p>Details unavailable</p>
+                                </div>
+                                <div class="card-actions">
+                                    <button class="view-btn" onclick="viewTeam('${teamName}')">View</button>
+                                    <button class="delete-btn" onclick="deleteTeam('${teamName}')">Delete</button>
+                                </div>
+                            `;
+                        });
+                    
+                    teamsGrid.appendChild(teamCard);
+                });
+            } catch (error) {
+                console.error('Error loading teams:', error);
+            }
+        }
+
+        let shortlistData = [];
+        let filteredShortlist = [];
+        let shortlistCurrentPage = 1;
+        const shortlistRowsPerPage = 10;
+
+        // Load shortlist data
+        async function loadShortlist() {
+            try {
+                const response = await fetch("/get-shortlist");
+                if (!response.ok) {
+                    throw new Error('Failed to fetch shortlist');
+                }
+
+                const shortlist = await response.json();
+                console.log("Shortlist data:", shortlist);
+                
+                if (shortlist.length === 0) {
+                    document.getElementById("shortlist-empty-message").style.display = "block";
+                    document.getElementById("shortlist-table").style.display = "none";
+                    document.querySelector(".pagination").style.display = "none";
+                    return;
+                }
+                
+                document.getElementById("shortlist-empty-message").style.display = "none";
+                document.getElementById("shortlist-table").style.display = "table";
+                document.querySelector(".pagination").style.display = "flex";
+                
+                const playerDataResponse = await fetch("/get-shortlisted-player-data");
+                if (!playerDataResponse.ok) {
+                    throw new Error('Failed to fetch player data');
+                }
+                
+                const playerData = await playerDataResponse.json();
+                console.log("Player data:", playerData);
+                
+                shortlistData = shortlist.map(item => {
+                    const playerInfo = playerData.find(p => p.Player === item.player_name) || {};
+                    return {
+                        ...item,
+                        ...playerInfo
+                    };
+                });
+
+                initializeShortlistFilters();
+
+                applyShortlistFilters();
+            } catch (error) {
+                console.error('Error loading shortlist:', error);
+            }
+        }
+
+    // Initialize filter dropdowns with unique values
+    function initializeShortlistFilters() {
+        const roleSelect = document.getElementById("shortlist-role-filter");
+        const uniqueRoles = [...new Set(shortlistData.filter(player => player["Best Role"]).map(player => player["Best Role"]))];
+        
+        while (roleSelect.options.length > 1) {
+            roleSelect.remove(1);
+        }
+
+        uniqueRoles.forEach(role => {
+            const option = document.createElement("option");
+            option.value = role;
+            option.textContent = role;
+            roleSelect.appendChild(option);
+        });
+
+        const teamSelect = document.getElementById("shortlist-team-filter");
+        const uniqueTeams = [...new Set(shortlistData.filter(player => player.Squad).map(player => player.Squad))];
+
+        while (teamSelect.options.length > 1) {
+            teamSelect.remove(1);
+        }
+
+        uniqueTeams.forEach(team => {
+            const option = document.createElement("option");
+            option.value = team;
+            option.textContent = team;
+            teamSelect.appendChild(option);
+        });
+    }
+
+    // Apply filters to shortlist data
+    function applyShortlistFilters() {
+        const searchTerm = document.getElementById("shortlist-search").value.toLowerCase();
+        const roleFilter = document.getElementById("shortlist-role-filter").value;
+        const teamFilter = document.getElementById("shortlist-team-filter").value;
+        
+        filteredShortlist = shortlistData.filter(player => {
+            const nameMatch = player.player_name && player.player_name.toLowerCase().includes(searchTerm);
+            
+            const roleMatch = !roleFilter || (player["Best Role"] && player["Best Role"] === roleFilter);
+
+            const teamMatch = !teamFilter || (player.Squad && player.Squad === teamFilter);
+            
+            return nameMatch && roleMatch && teamMatch;
+        });
+ 
+        shortlistCurrentPage = 1;
+
+        renderShortlistPage();
+        updateShortlistPagination();
+    }
+
+    // Render the current page of shortlist
+    function renderShortlistPage() {
+        const tbody = document.getElementById("shortlist-tbody");
+        tbody.innerHTML = '';
+        
+        const start = (shortlistCurrentPage - 1) * shortlistRowsPerPage;
+        const end = start + shortlistRowsPerPage;
+        const pageData = filteredShortlist.slice(start, end);
+        
+        pageData.forEach(player => {
+            const tr = document.createElement("tr");
+
+            const tdName = document.createElement("td");
+            tdName.textContent = player.player_name || '-';
+            tr.appendChild(tdName);
+ 
+            const tdPos = document.createElement("td");
+            tdPos.textContent = player.Pos || '-';
+            tr.appendChild(tdPos);
+      
+            const tdTeam = document.createElement("td");
+            tdTeam.textContent = player.Squad || '-';
+            tr.appendChild(tdTeam);
+        
+            const tdLeague = document.createElement("td");
+            tdLeague.textContent = player.Comp || '-';
+            tr.appendChild(tdLeague);
+       
+            const tdAge = document.createElement("td");
+            tdAge.textContent = player.Age || '-';
+            tr.appendChild(tdAge);
+      
+            const tdRole = document.createElement("td");
+            tdRole.textContent = player["Best Role"] || '-';
+            tr.appendChild(tdRole);
+      
+            const tdNote = document.createElement("td");
+            const noteSpan = document.createElement("span");
+            noteSpan.className = "shortlist-note";
+            if (player.note) {
+                noteSpan.textContent = player.note;
+                noteSpan.classList.add("has-note");
+                noteSpan.title = player.note;
+                noteSpan.onclick = () => showNoteModal(player.player_name, player.note);
+            } else {
+                noteSpan.textContent = "No note";
+            }
+            tdNote.appendChild(noteSpan);
+            tr.appendChild(tdNote);
+      
+            const tdActions = document.createElement("td");
+            tdActions.className = "shortlist-actions";
+           
+            const viewBtn = document.createElement("button");
+            viewBtn.className = "view-player-btn";
+            viewBtn.textContent = "View";
+            viewBtn.onclick = () => viewPlayer(player.player_name);
+            tdActions.appendChild(viewBtn);
+         
+            const editBtn = document.createElement("button");
+            editBtn.className = "edit-note-btn";
+            editBtn.textContent = "Edit Note";
+            editBtn.onclick = () => showNoteModal(player.player_name, player.note || "");
+            tdActions.appendChild(editBtn);
+        
+            const removeBtn = document.createElement("button");
+            removeBtn.className = "remove-from-shortlist-btn";
+            removeBtn.textContent = "Remove";
+            removeBtn.onclick = () => removeFromShortlist(player.player_name);
+            tdActions.appendChild(removeBtn);
+            
+            tr.appendChild(tdActions);
+            
+            tbody.appendChild(tr);
+        });
+
+        if (pageData.length === 0) {
+            const tr = document.createElement("tr");
+            const td = document.createElement("td");
+            td.colSpan = 8;
+            td.textContent = "No players found matching your filters.";
+            td.style.textAlign = "center";
+            td.style.padding = "20px";
+            tr.appendChild(td);
+            tbody.appendChild(tr);
+        }
+    }
+
+    // Update pagination
+    function updateShortlistPagination() {
+        const totalPages = Math.ceil(filteredShortlist.length / shortlistRowsPerPage);
+        document.getElementById("shortlist-page-info").textContent = `Page ${shortlistCurrentPage} of ${totalPages}`;
+        
+        // Enable/disable buttons
+        document.getElementById("shortlist-prev-page").disabled = shortlistCurrentPage === 1;
+        document.getElementById("shortlist-next-page").disabled = shortlistCurrentPage === totalPages || totalPages === 0;
+    }
+
+    // View player details
+    function viewPlayer(playerName) {
+        window.location.href = `playerPage?name=${encodeURIComponent(playerName)}`;
+    }
+
+    // Show note modal
+    function showNoteModal(playerName, note) {
+        const modal = document.getElementById("note-modal");
+        const playerNameInput = document.getElementById("note-player-name");
+        const noteTextarea = document.getElementById("player-note");
+        
+        playerNameInput.value = playerName;
+        noteTextarea.value = note;
+        
+        modal.style.display = "block";
+    }
+
+    // Save note
+    async function saveNote() {
+        const playerName = document.getElementById("note-player-name").value;
+        const note = document.getElementById("player-note").value;
+        
+        try {
+            const response = await fetch("/update-shortlist-note", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ player_name: playerName, note: note })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                const playerIndex = shortlistData.findIndex(p => p.player_name === playerName);
+                if (playerIndex !== -1) {
+                    shortlistData[playerIndex].note = note;
+
+                    const filteredIndex = filteredShortlist.findIndex(p => p.player_name === playerName);
+                    if (filteredIndex !== -1) {
+                        filteredShortlist[filteredIndex].note = note;
+                    }
+
+                    renderShortlistPage();
+                }
+
+                document.getElementById("note-modal").style.display = "none";
+            } else {
+                alert(data.error || "Failed to update note");
+            }
+        } catch (error) {
+            console.error("Error saving note:", error);
+            alert("An error occurred while saving the note");
+        }
+    }
+
+    // Remove player from shortlist
+    async function removeFromShortlist(playerName) {
+        if (!confirm(`Are you sure you want to remove ${playerName} from your shortlist?`)) {
+            return;
+        }
+        
+        try {
+            const response = await fetch("/remove-from-shortlist", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ player_name: playerName })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                shortlistData = shortlistData.filter(p => p.player_name !== playerName);
+                filteredShortlist = filteredShortlist.filter(p => p.player_name !== playerName);
+
+                const totalPages = Math.ceil(filteredShortlist.length / shortlistRowsPerPage);
+                if (shortlistCurrentPage > totalPages && totalPages > 0) {
+                    shortlistCurrentPage = totalPages;
+                }
+
+                renderShortlistPage();
+                updateShortlistPagination();
+
+                if (shortlistData.length === 0) {
+                    document.getElementById("shortlist-empty-message").style.display = "block";
+                    document.getElementById("shortlist-table").style.display = "none";
+                    document.querySelector(".pagination").style.display = "none";
+                }
+            } else {
+                alert(data.error || "Failed to remove player from shortlist");
+            }
+        } catch (error) {
+            console.error("Error removing from shortlist:", error);
+            alert("An error occurred while removing the player from your shortlist");
+        }
+    }
+
+    // Add event listeners when DOM is loaded
+    document.addEventListener("DOMContentLoaded", function() {
+        // Load shortlist when the tab is clicked
+        document.querySelector('.tab[data-tab="shortlist"]').addEventListener('click', loadShortlist);
+        
+        // Shortlist filter events
+        document.getElementById("shortlist-search").addEventListener("input", applyShortlistFilters);
+        document.getElementById("shortlist-role-filter").addEventListener("change", applyShortlistFilters);
+        document.getElementById("shortlist-team-filter").addEventListener("change", applyShortlistFilters);
+        document.getElementById("reset-shortlist-filters").addEventListener("click", function() {
+            document.getElementById("shortlist-search").value = "";
+            document.getElementById("shortlist-role-filter").value = "";
+            document.getElementById("shortlist-team-filter").value = "";
+            applyShortlistFilters();
+        });
+        
+        // Pagination events
+        document.getElementById("shortlist-prev-page").addEventListener("click", function() {
+            if (shortlistCurrentPage > 1) {
+                shortlistCurrentPage--;
+                renderShortlistPage();
+                updateShortlistPagination();
+            }
+        });
+        
+        document.getElementById("shortlist-next-page").addEventListener("click", function() {
+            const totalPages = Math.ceil(filteredShortlist.length / shortlistRowsPerPage);
+            if (shortlistCurrentPage < totalPages) {
+                shortlistCurrentPage++;
+                renderShortlistPage();
+                updateShortlistPagination();
+            }
+        });
+        
+        // Note modal events
+        document.querySelector(".close-note-modal").addEventListener("click", function() {
+            document.getElementById("note-modal").style.display = "none";
+        });
+        
+        document.getElementById("save-note").addEventListener("click", saveNote);
+
+        window.addEventListener("click", function(event) {
+            const modal = document.getElementById("note-modal");
+            if (event.target === modal) {
+                modal.style.display = "none";
+            }
+        });
+    });
+
+        // Function to view a formation
+        function viewFormation(formationName) {
+            localStorage.setItem('selectedFormation', formationName);
+            window.location.href = `teamBuilder`;
+        }
+
+        // Function to delete a formation
+        function deleteFormation(formationName) {
+            if (!confirm(`Are you sure you want to delete the formation "${formationName}"?`)) {
+                return;
+            }
+            
+            console.log(`Deleting formation: ${formationName}`);
+            
+            fetch("/delete-formation", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ name: formationName })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Delete formation response:", data);
+                if (data.message === "Formation deleted successfully") {
+                    alert(`Formation "${formationName}" deleted successfully.`);
+                    loadFormations(); 
+                } else {
+                    alert(data.error || "Failed to delete formation.");
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting formation:', error);
+                alert("An error occurred while deleting the formation.");
+            });
+        }
+
+        // Function to view a team
+        function viewTeam(teamName) {
+            localStorage.setItem('selectedTeam', teamName);
+            window.location.href = `teamBuilder`;
+        }
+
+        // Function to delete a team
+        function deleteTeam(teamName) {
+            if (!confirm(`Are you sure you want to delete the team "${teamName}"?`)) {
+                return;
+            }
+            
+            console.log(`Deleting team: ${teamName}`);
+            
+            fetch("/delete-team", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ name: teamName })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Delete team response:", data);
+                if (data.message) {
+                    alert(data.message);
+                    loadTeams(); 
+                } else {
+                    alert(data.error || "Failed to delete team.");
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting team:', error);
+                alert("An error occurred while deleting the team.");
+            });
+        }
+
+        // Tab switching functionality
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+                tab.classList.add('active');
+                const contentId = tab.getAttribute('data-tab');
+                document.getElementById(contentId).classList.add('active');
+            });
+        });
+
+        // Autocomplete functionality for player search
+        const searchForm = document.getElementById("search-form");
+        const playerNameInput = document.getElementById("player_name");
+        const autocompleteDropdown = document.getElementById("autocomplete-dropdown");
+        
+        if (searchForm && playerNameInput && autocompleteDropdown) {
+            // Function to fetch player names from the backend
+            async function fetchPlayerNames(searchTerm) {
+                try {
+                    const response = await fetch(`http://127.0.0.1:5000/players?starts_with=${encodeURIComponent(searchTerm)}`);
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    const data = await response.json();
+                    return data; 
+                } catch (error) {
+                    console.error('Error fetching player names:', error);
+                    return [];
+                }
+            }
+        
+            // Function to display the autocomplete dropdown
+            function showAutocompleteDropdown(names) {
+                autocompleteDropdown.innerHTML = ''; 
+                if (names.length > 0) {
+                    names.forEach(name => {
+                        const div = document.createElement('div');
+                        div.textContent = name;
+                        div.addEventListener('click', () => {
+                            playerNameInput.value = name;
+                            autocompleteDropdown.innerHTML = ''; 
+                        });
+                        autocompleteDropdown.appendChild(div);
+                    });
+                    autocompleteDropdown.style.display = 'block';
+                } else {
+                    autocompleteDropdown.style.display = 'none';
+                }
+            }
+        
+            // Event listener for input changes
+            playerNameInput.addEventListener('input', async function () {
+                const searchTerm = this.value.trim().toLowerCase(); 
+                if (searchTerm.length > 0) {
+                    const playerNames = await fetchPlayerNames(searchTerm);
+                    showAutocompleteDropdown(playerNames);
+                } else {
+                    autocompleteDropdown.style.display = 'none';
+                }
+            });
+        
+            // Event listener for form submission
+            searchForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                
+                const playerName = playerNameInput.value.trim();
+                if (playerName) {
+                    window.location.href = `playerPage?name=${encodeURIComponent(playerName)}`;
+                }
+            });
+
+            document.addEventListener('click', function (e) {
+                if (!autocompleteDropdown.contains(e.target) && e.target !== playerNameInput) {
+                    autocompleteDropdown.style.display = 'none';
+                }
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            checkLoginState();
+        });
+    </script>
+    <script src="{{ url_for('static', filename='customRole.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Table Viewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            cursor: pointer;
+        }
+        input {
+            margin-bottom: 10px;
+            padding: 5px;
+        }
+        .pagination {
+            margin-top: 10px;
+        }
+        .pagination button {
+            margin: 0 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #6a0dad;
+            padding: 15px;
+            border-radius: 15px;
+            margin: 15px 15px 20px 15px;
+        }
+
+        .navbar .logo {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .navbar .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .navbar .nav-links a {
+            padding: 10px 20px;
+            text-decoration: none;
+            color: #fff;
+            background-color: #4b0082;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .navbar .nav-links a.active {
+            background-color: #6a0dad;
+        }
+
+        .navbar .search-bar {
+            background-color: #6a0dad;
+            padding: 5px;
+            border-radius: 10px;
+        }
+
+        .navbar .search-bar input {
+            padding: 5px 10px;
+            border: none;
+            outline: none;
+            border-radius: 5px;
+        }
+
+        .auth-buttons {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .auth-buttons button {
+            padding: 8px 16px;
+            background-color: #4b0082;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .auth-buttons span {
+            color: white;
+            margin-right: 10px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 300px;
+            border-radius: 10px;
+        }
+
+        .close {
+            float: right;
+            cursor: pointer;
+        }
+
+        .column-group-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .column-button {
+            padding: 8px 15px;
+            background-color: #6a0dad;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .column-button:hover {
+            background-color: #8a2be2;
+        }
+
+        .column-button.active {
+            background-color: #4b0082;
+            font-weight: bold;
+        }
+        .active-filters {
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #f8f8f8;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .filter-item {
+            display: inline-block;
+            margin: 5px;
+            padding: 8px;
+            background-color: #e6e6ff;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .filter-item button {
+            background: none;
+            border: none;
+            color: red;
+            cursor: pointer;
+            margin-left: 5px;
+            font-weight: bold;
+        }
+
+        .add-filter-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .add-filter-row select, .add-filter-row input {
+            margin-right: 10px;
+            padding: 5px;
+        }
+
+        .add-filter-row button {
+            padding: 5px 10px;
+            background-color: #6a0dad;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .add-filter-row button:hover {
+            background-color: #8a2be2;
+        }
+        .shortlist-btn {
+            background-color: #6a0dad;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+
+        .shortlist-btn:hover {
+            background-color: #8b28e6;
+        }
+
+        .shortlist-btn.active {
+            background-color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a href="/" class="logo">Data Scout</a>
+        <div class="nav-links">
+            <a href="displayData">Database</a>
+            <a href="teamBuilder">Team Builder</a>
+            <a href="compare">Comparison</a>
+            <a href="account" class="active">Account</a>
+        </div>
+        <div class="search-bar">
+            <form id="search-form">
+                <input type="text" id="player_name" name="player_name" placeholder="Enter player name" autocomplete="off">
+                <div id="autocomplete-dropdown"></div>
+                <button type="submit">Search</button>
+            </form>
+        </div>
+        <div class="auth-buttons">
+            <button id="loginButton">Login/Register</button>
+        </div>
+    </div>
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Login/Register</h2>
+            <form id="loginForm">
+                <input type="text" id="loginUsername" placeholder="Username" required>
+                <input type="password" id="loginPassword" placeholder="Password" required>
+                <button type="submit">Login</button>
+            </form>
+            <form id="registerForm">
+                <input type="text" id="registerUsername" placeholder="Username" required>
+                <input type="password" id="registerPassword" placeholder="Password" required>
+                <button type="submit">Register</button>
+            </form>
+        </div>
+    </div>
+        <div class="column-group-buttons">
+            <button class="column-button active" data-group="all">All Columns</button>
+            <button class="column-button" data-group="basic">Basic Info</button>
+            <button class="column-button" data-group="Discipline">Discipline</button>
+            <button class="column-button" data-group="Shooting">Shooting</button>
+            <button class="column-button" data-group="Passing">Passing</button>
+            <button class="column-button" data-group="Defensive Actions">Defensive Actions</button>
+            <button class="column-button" data-group="Dribbling">Dribbling</button>
+        </div>
+        <!-- Advanced Filtering -->
+        <div class="advanced-filters">
+            <h3>Filters</h3>
+            <div class="active-filters" id="activeFilters">No active filters</div>
+            <div class="add-filter-row">
+                <select id="filterColumn">
+                    <option value="">Select Column</option>
+                </select>
+                <select id="filterOperator">
+                    <option value="=">=</option>
+                    <option value=">">></option>
+                    <option value="<"><</option>
+                    <option value="includes">Contains</option>
+                </select>
+                <input type="text" id="filterValue" placeholder="Value">
+                <button id="addFilterBtn">Add Filter</button>
+            </div>
+        </div>
+        <div id="filters"></div>
+        <table id="csvTable">
+            <thead></thead>
+            <tbody></tbody>
+        </table>
+        <div class="pagination">
+            <button id="prevPage">Previous</button>
+            <span id="pageInfo"></span>
+            <button id="nextPage">Next</button>
+        </div>
+    <script>
+        // Get the modal and buttons
+        const authModal = document.getElementById("authModal");
+        const loginButton = document.getElementById("loginButton");
+        const closeButton = document.querySelector(".close");
+
+        // Show the modal when the login button is clicked
+        loginButton.addEventListener("click", () => {
+            authModal.style.display = "block";
+        });
+
+        // Hide the modal when the close button is clicked
+        closeButton.addEventListener("click", () => {
+            authModal.style.display = "none";
+        });
+
+        // Hide the modal when clicking outside of it
+        window.addEventListener("click", (event) => {
+            if (event.target === authModal) {
+                authModal.style.display = "none";
+            }
+        });
+
+        // Handle login form submission
+        document.getElementById("loginForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const username = document.getElementById("loginUsername").value;
+            const password = document.getElementById("loginPassword").value;
+
+            const response = await fetch("/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password }),
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                alert("Login successful!");
+                authModal.style.display = "none";
+                updateUIForLoggedInUser(data.username); // Update the UI with the logged-in user's username
+            } else {
+                alert(data.error);
+            }
+        });
+
+        // Handle register form submission
+        document.getElementById("registerForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const username = document.getElementById("registerUsername").value;
+            const password = document.getElementById("registerPassword").value;
+
+            const response = await fetch("/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password }),
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                alert("Registration successful!");
+                authModal.style.display = "none";
+            } else {
+                alert(data.error);
+            }
+        });
+
+        // Update UI for logged-in user
+        function updateUIForLoggedInUser(username) {
+            const authButtons = document.querySelector(".auth-buttons");
+            authButtons.innerHTML = `
+                <span>Welcome, ${username}</span>
+                <button id="logoutButton">Logout</button>
+            `;
+
+            document.getElementById("logoutButton").addEventListener("click", async () => {
+                const response = await fetch("/logout", { method: "POST" });
+                if (response.ok) {
+                    alert("Logged out successfully!");
+                    window.location.reload(); // Reload the page to reflect the logged-out state
+                }
+            });
+        }
+
+        // Check login state on page load
+        async function checkLoginState() {
+            const response = await fetch("/check-login", { method: "GET" });
+            if (response.ok) {
+                const data = await response.json();
+                if (data.logged_in) {
+                    setTimeout(updateAllShortlistButtons, 1000);
+                    updateUIForLoggedInUser(data.username);
+                }
+            }
+        }
+
+        // Run checkLoginState when the page loads
+        document.addEventListener("DOMContentLoaded", () => {
+            checkLoginState();
+        });
+        
+        const searchForm = document.getElementById("search-form");
+        const playerNameInput = document.getElementById("player_name");
+        const autocompleteDropdown = document.getElementById("autocomplete-dropdown");
+        
+        if (searchForm && playerNameInput && autocompleteDropdown) {
+            // Function to fetch player names from the backend
+            async function fetchPlayerNames(searchTerm) {
+                try {
+                    const response = await fetch(`http://127.0.0.1:5000/players?starts_with=${encodeURIComponent(searchTerm)}`);
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    const data = await response.json();
+                    return data; 
+                } catch (error) {
+                    console.error('Error fetching player names:', error);
+                    return [];
+                }
+            }
+        
+            // Function to display the autocomplete dropdown
+            function showAutocompleteDropdown(names) {
+                autocompleteDropdown.innerHTML = ''; // Clear previous results
+                if (names.length > 0) {
+                    names.forEach(name => {
+                        const div = document.createElement('div');
+                        div.textContent = name;
+                        div.addEventListener('click', () => {
+                            playerNameInput.value = name;
+                            autocompleteDropdown.innerHTML = ''; // Clear dropdown after selection
+                        });
+                        autocompleteDropdown.appendChild(div);
+                    });
+                    autocompleteDropdown.style.display = 'block';
+                } else {
+                    autocompleteDropdown.style.display = 'none';
+                }
+            }
+        
+            // Event listener for input changes
+            playerNameInput.addEventListener('input', async function () {
+                const searchTerm = this.value.trim().toLowerCase(); 
+                if (searchTerm.length > 0) {
+                    const playerNames = await fetchPlayerNames(searchTerm);
+                    showAutocompleteDropdown(playerNames);
+                } else {
+                    autocompleteDropdown.style.display = 'none';
+                }
+            });
+        
+            // Event listener for form submission
+            searchForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                
+                const playerName = playerNameInput.value.trim();
+                if (playerName) {
+                    window.location.href = `playerPage?name=${encodeURIComponent(playerName)}`;
+                }
+            });
+        
+            // Hide dropdown when clicking outside
+            document.addEventListener('click', function (e) {
+                if (!autocompleteDropdown.contains(e.target) && e.target !== playerNameInput) {
+                    autocompleteDropdown.style.display = 'none';
+                }
+            });
+        }
+
+        let originalTableData = [];
+        let tableData = [];
+        let currentPage = 1;
+        const rowsPerPage = 50;
+        let columnGroups = {}; 
+        let allColumns = []; 
+        let visibleColumns = []; 
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('../data/CleanedData.csv')
+                .then(response => response.text())
+                .then(text => {
+                    parseCSV(text);
+                    originalTableData = tableData; 
+                    setupColumnGroups(); 
+                    setupFilterDropdown(); 
+                })
+                .catch(error => console.error('Error fetching CSV:', error));
+
+            document.getElementById('addFilterBtn').addEventListener('click', addFilter);
+
+            document.querySelectorAll('.column-button').forEach(button => {
+                button.addEventListener('click', () => toggleColumnGroup(button.dataset.group));
+            });
+        });
+
+        function parseCSV(csv) {
+            const rows = parseCSVData(csv); 
+            tableData = rows;
+            generateTable(getPaginatedData());
+            createFilters(rows[0]);
+            updatePagination();
+            allColumns = rows[0]; 
+            visibleColumns = [...allColumns]; 
+        }
+
+        function parseCSVData(csv) {
+            const rows = [];
+            let insideQuotes = false;
+            let currentRow = [];
+            let currentCell = '';
+            let i = 0;
+
+            while (i < csv.length) {
+                const char = csv[i];
+
+                if (char === '"') {
+                    insideQuotes = !insideQuotes; 
+                    i++;
+                } else if (char === ',' && !insideQuotes) {
+                    // End of cell
+                    currentRow.push(currentCell.trim());
+                    currentCell = '';
+                    i++;
+                } else if (char === '\n' && !insideQuotes) {
+                    // End of row
+                    currentRow.push(currentCell.trim());
+                    rows.push(currentRow);
+                    currentRow = [];
+                    currentCell = '';
+                    i++;
+                } else {
+                    // Append character to current cell
+                    currentCell += char;
+                    i++;
+                }
+            }
+
+            // Add the last row if it exists
+            if (currentRow.length > 0 || currentCell.trim() !== '') {
+                currentRow.push(currentCell.trim());
+                rows.push(currentRow);
+            }
+
+            return rows;
+        }
+
+        // Generate the table with only the visible columns
+        function generateTableWithVisibleColumns() {
+            const tableHead = document.querySelector('#csvTable thead');
+            const tableBody = document.querySelector('#csvTable tbody');
+            tableHead.innerHTML = '';
+            tableBody.innerHTML = '';
+            
+            // Get visible column indices
+            const visibleIndices = visibleColumns.map(col => allColumns.indexOf(col)).filter(index => index !== -1);
+            
+            // Create headers
+            let headerRow = document.createElement('tr');
+            visibleIndices.forEach(index => {
+                let th = document.createElement('th');
+                th.textContent = allColumns[index];
+                th.onclick = () => sortTable(index);
+                headerRow.appendChild(th);
+            });
+            tableHead.appendChild(headerRow);
+            
+            // Create rows for current page
+            const paginatedData = getPaginatedData();
+            paginatedData.slice(1).forEach(row => {
+                let tr = document.createElement('tr');
+                visibleIndices.forEach(index => {
+                    let td = document.createElement('td');
+                    td.textContent = row[index] || '';
+                    tr.appendChild(td);
+                });
+                tableBody.appendChild(tr);
+            });
+        }
+        // Store active filters
+        let activeFilters = [];
+
+        // Setup the column filter dropdown
+        function setupFilterDropdown() {
+            const filterColumnSelect = document.getElementById('filterColumn');
+            filterColumnSelect.innerHTML = '<option value="">Select Column</option>';
+            
+            allColumns.forEach((column, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = column;
+                filterColumnSelect.appendChild(option);
+            });
+        }
+
+        // Add a new filter
+        function addFilter() {
+            const columnSelect = document.getElementById('filterColumn');
+            const operatorSelect = document.getElementById('filterOperator');
+            const valueInput = document.getElementById('filterValue');
+            
+            const columnIndex = parseInt(columnSelect.value);
+            const operator = operatorSelect.value;
+            const value = valueInput.value.trim();
+            
+            if (isNaN(columnIndex) || !operator || !value) {
+                alert('Please select a column, operator, and enter a value.');
+                return;
+            }
+            
+            const columnName = allColumns[columnIndex];
+            
+            // Create filter object
+            const filter = {
+                index: columnIndex,
+                operator: operator,
+                value: value,
+                displayText: `${columnName} ${operator} ${value}`
+            };
+            
+            // Add to active filters
+            activeFilters.push(filter);
+            
+            // Update UI and apply filters
+            updateActiveFiltersUI();
+            applyFilters();
+            
+            // Clear the input fields
+            columnSelect.value = '';
+            valueInput.value = '';
+        }
+
+        // Update the active filters display
+        function updateActiveFiltersUI() {
+            const activeFiltersContainer = document.getElementById('activeFilters');
+            
+            if (activeFilters.length === 0) {
+                activeFiltersContainer.innerHTML = 'No active filters';
+                return;
+            }
+            
+            activeFiltersContainer.innerHTML = '';
+            
+            activeFilters.forEach((filter, index) => {
+                const filterItem = document.createElement('div');
+                filterItem.className = 'filter-item';
+                filterItem.innerHTML = `
+                    ${filter.displayText}
+                    <button onclick="removeActiveFilter(${index})">×</button>
+                `;
+                activeFiltersContainer.appendChild(filterItem);
+            });
+        }
+
+        // Remove an active filter
+        function removeActiveFilter(index) {
+            activeFilters.splice(index, 1);
+            updateActiveFiltersUI();
+            applyFilters();
+        }
+
+        // Apply all active filters
+        function applyFilters() {
+            let filteredData = originalTableData.slice(1).filter(row => {
+                return activeFilters.every(filter => {
+                    const cellValue = row[filter.index];
+                    let filterValue = filter.value;
+                    
+                    // Handle numeric comparisons
+                    if (filter.operator === '=' || filter.operator === '>' || filter.operator === '<') {
+                        const numericCellValue = parseFloat(cellValue);
+                        const numericFilterValue = parseFloat(filterValue);
+                        
+                        if (!isNaN(numericCellValue) && !isNaN(numericFilterValue)) {
+                            if (filter.operator === '=') return numericCellValue === numericFilterValue;
+                            if (filter.operator === '>') return numericCellValue > numericFilterValue;
+                            if (filter.operator === '<') return numericCellValue < numericFilterValue;
+                        }
+                    }
+                    
+                    if (filter.operator === 'includes') {
+                        return cellValue.toString().toLowerCase().includes(filterValue.toString().toLowerCase());
+                    }
+                    
+                    if (filter.operator === '=') {
+                        return cellValue.toString().toLowerCase() === filterValue.toString().toLowerCase();
+                    }
+                    
+                    return false;
+                });
+            });
+            
+            // Update the table
+            tableData = [originalTableData[0], ...filteredData];
+            currentPage = 1; 
+            
+            if (visibleColumns.length > 0) {
+                generateTableWithVisibleColumns();
+            } else {
+                generateTable(getPaginatedData());
+            }
+            
+            updatePagination();
+        }
+
+        function generateTable(data) {
+            if (visibleColumns.length > 0) {
+                generateTableWithVisibleColumns();
+                return;
+            }
+            const tableHead = document.querySelector('#csvTable thead');
+            const tableBody = document.querySelector('#csvTable tbody');
+            tableHead.innerHTML = '';
+            tableBody.innerHTML = '';
+
+            if (data.length === 0) return;
+
+            let headers = data[0];
+            let headerRow = document.createElement('tr');
+
+            headers.forEach((header, index) => {
+                let th = document.createElement('th');
+                th.textContent = header;
+                th.onclick = () => sortTable(index);
+                headerRow.appendChild(th);
+            });
+
+            let actionsHeader = document.createElement('th');
+            actionsHeader.textContent = 'Actions';
+            headerRow.appendChild(actionsHeader);
+
+            tableHead.appendChild(headerRow);
+
+            data.slice(1).forEach(row => {
+                let tr = document.createElement('tr');
+                row.forEach(cell => {
+                    let td = document.createElement('td');
+                    td.textContent = cell;
+                    tr.appendChild(td);
+                });
+                const playerNameIndex = headers.indexOf('Player');
+                const playerName = playerNameIndex !== -1 ? row[playerNameIndex] : '';
+                
+                let actionsTd = document.createElement('td');
+                
+                if (playerName) {
+                    // View player button
+                    let viewBtn = document.createElement('button');
+                    viewBtn.textContent = 'View';
+                    viewBtn.onclick = () => {
+                        window.location.href = `playerPage?name=${encodeURIComponent(playerName)}`;
+                    };
+                    viewBtn.style.backgroundColor = '#4b0082';
+                    viewBtn.style.color = 'white';
+                    viewBtn.style.border = 'none';
+                    viewBtn.style.borderRadius = '4px';
+                    viewBtn.style.padding = '4px 8px';
+                    viewBtn.style.cursor = 'pointer';
+                    viewBtn.style.marginRight = '5px';
+                    actionsTd.appendChild(viewBtn);
+                    
+                    // Shortlist button
+                    let shortlistBtn = document.createElement('button');
+                    shortlistBtn.className = 'shortlist-btn';
+                    shortlistBtn.setAttribute('data-player', playerName);
+                    shortlistBtn.textContent = 'Add to Shortlist';
+                    shortlistBtn.style.backgroundColor = '#6a0dad';
+                    shortlistBtn.style.color = 'white';
+                    shortlistBtn.style.border = 'none';
+                    shortlistBtn.style.borderRadius = '4px';
+                    shortlistBtn.style.padding = '4px 8px';
+                    shortlistBtn.style.cursor = 'pointer';
+                    
+                    // Check if player is already shortlisted
+                    checkIfShortlisted(playerName, shortlistBtn);
+                    
+                    shortlistBtn.onclick = function() {
+                        toggleShortlist(playerName, this);
+                    };
+                    
+                    actionsTd.appendChild(shortlistBtn);
+                }
+                
+                tr.appendChild(actionsTd);
+                tableBody.appendChild(tr);
+            });
+        }
+
+        async function checkIfShortlisted(playerName, button) {
+            try {
+                const response = await fetch(`/check-shortlisted?player_name=${encodeURIComponent(playerName)}`);
+                if (!response.ok) {
+                    console.error('Failed to check shortlist status');
+                    return;
+                }
+                
+                const data = await response.json();
+                
+                if (data.is_shortlisted) {
+                    button.textContent = 'Remove from Shortlist';
+                    button.style.backgroundColor = '#4CAF50';
+                    button.classList.add('active');
+                } else {
+                    button.textContent = 'Add to Shortlist';
+                    button.style.backgroundColor = '#6a0dad';
+                    button.classList.remove('active');
+                }
+            } catch (error) {
+                console.error('Error checking shortlist status:', error);
+            }
+        }
+
+        // Function to toggle shortlist status
+        async function toggleShortlist(playerName, button) {
+            const isRemoving = button.classList.contains('active');
+            
+            try {
+                const response = await fetch(isRemoving ? '/remove-from-shortlist' : '/add-to-shortlist', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ player_name: playerName })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to update shortlist');
+                }
+                
+                const data = await response.json();
+                
+                if (isRemoving) {
+                    button.textContent = 'Add to Shortlist';
+                    button.style.backgroundColor = '#6a0dad'; 
+                    button.classList.remove('active');
+                } else {
+                    button.textContent = 'Remove from Shortlist';
+                    button.style.backgroundColor = '#4CAF50';
+                    button.classList.add('active');
+                }
+
+                alert(data.message);
+                
+            } catch (error) {
+                console.error('Error updating shortlist:', error);
+                alert('Error updating shortlist. Please try again.');
+            }
+        }
+
+        // Update all shortlist buttons on the page
+        function updateAllShortlistButtons() {
+            document.querySelectorAll('.shortlist-btn').forEach(button => {
+                const playerName = button.getAttribute('data-player');
+                if (playerName) {
+                    checkIfShortlisted(playerName, button);
+                }
+            });
+        }
+
+        function sortTable(columnIndex) {
+            let rows = tableData.slice(1).sort((a, b) => a[columnIndex].localeCompare(b[columnIndex]));
+            tableData = [tableData[0], ...rows];
+            
+            if (visibleColumns.length > 0) {
+                generateTableWithVisibleColumns();
+            } else {
+                generateTable(getPaginatedData());
+            }
+        }
+
+        function setupColumnGroups() {
+            columnGroups = {
+                'all': allColumns, 
+                'basic': ['Season', 'Player', 'Pos', 'Squad', 'Comp', 'Nation', 'Age', 'Matches Played', 'Starts', 'Minutes', '90s Played', 'Best Role'],
+                'Discipline': ['Yellow Cards', 'Second Yellow Card', 'Red Cards'],
+                'Shooting': ['xG: Expected Goals', 'npxG: Non-Penalty xG', 'Penalty Kicks Made', 'Penalty Kicks Attempted', 'Non-Penalty Goals', 'Goals','Shots Total', 'Shots on Target', 'Shots on Target %', 'Goals/Shot', 'Goals/Shot on Target', 'Average Shot Distance', 'Shots from Free Kicks', 'npxG/Shot', 'Non-Penalty Goals - npxG'],
+                'Passing': ['Assists', 'Goals + Assists', 'Non-Penalty Goals + Assists', 'xAG: Exp. Assisted Goals', 'xA: Expected Assists', 'Assists - xAG', 'npxG + xAG', 'Pass Attempted', 'Live-ball Passes', 'Dead-ball Passes', 'Passes from Free Kicks', 'Through Balls', 'Passes Blocked', 'Passes Offside', 'Passes Completed', 'Pass Completion %', 'Total Passing Distance', 'Progressive Passing Distance', 'Passes Completed (Short)', 'Passes Attempted (Short)', 'Pass Completion % (Short)', 'Passes Completed (Medium)', 'Passes Attempted (Medium)', 'Pass Completion % (Medium)', 'Passes Completed (Long)', 'Passes Attempted (Long)', 'Pass Completion % (Long)', 'Key Passes', 'Passes into Final Third', 'Passes into Penalty Area', 'Crosses into Penalty Area', 'Progressive Passes', 'Switches', 'Crosses', 'Corner Kicks', 'Inswinging Corner Kicks', 'Outswinging Corner Kicks', 'Straight Corner Kicks'],
+                'Defensive Actions': ['Tackles', 'Tackles Won', 'Tackles (Def 3rd)', 'Tackles (Mid 3rd)', 'Tackles (Att 3rd)', 'Dribblers Tackled', '% of Dribblers Tackled', 'Blocks', 'Shots Blocked', 'Passes Blocked', 'Interceptions', 'Clearences', 'Errors',  'Fouls Committed', 'Penalty Kicks Conceded', 'Own Goals', 'Ball Recoveries', 'Aerials Won', 'Aerials Lost', '% of Aerials Won'],
+                'Dribbling': ['Touches', 'Touches (Def 3rd)', 'Touches (Mid 3rd)', 'Touches (Att 3rd)', 'Touches (Att Pen)', 'Take-Ons Attempted', 'Successful Take-On %', 'Tackled During Take-On Percentage', 'Carries', 'Total Carrying Distance', 'Progressive Carries', 'Progressive Carrying Distance', 'Carries into Final Third', 'Carries into Penalty Area', 'Miscontrols', 'Dispossessed', 'Passes Received', 'Progressive Passes Rec', 'Fouls Drawn', 'Offsides', 'Penalty Kicks Won']
+            };
+        }
+
+        function createFilters(headers) {
+            const filtersDiv = document.getElementById('filters');
+            filtersDiv.innerHTML = '';
+
+            // Search bars with autocomplete
+            const searchFilters = ['Player', 'Squad', 'Comp', 'Nation'];
+            searchFilters.forEach(header => {
+                const index = headers.indexOf(header);
+                if (index !== -1) {
+                    const filterDiv = document.createElement('div');
+                    filterDiv.innerHTML = `
+                        <input type="text" id="${header}Filter" placeholder="Search ${header}" list="${header}List">
+                        <datalist id="${header}List"></datalist>
+                    `;
+                    filtersDiv.appendChild(filterDiv);
+
+                    const input = document.getElementById(`${header}Filter`);
+                    const datalist = document.getElementById(`${header}List`);
+
+                    const uniqueValues = [...new Set(tableData.slice(1).map(row => row[index]))];
+                    uniqueValues.forEach(value => {
+                        const option = document.createElement('option');
+                        option.value = value;
+                        datalist.appendChild(option);
+                    });
+                }
+            });
+
+            // Position filter (dropdown menu)
+            const roleIndex = headers.indexOf('Best Role');
+            if (roleIndex !== -1) {
+                const posFilter = document.createElement('div');
+                posFilter.innerHTML = `
+                    <select id="posFilter">
+                        <option value="">All Roles</option>
+                    </select>
+                `;
+                filtersDiv.appendChild(posFilter);
+
+                const posSelect = document.getElementById('posFilter');
+
+                const uniqueRoles = [...new Set(tableData.slice(1).map(row => row[roleIndex]))];
+                uniqueRoles.forEach(role => {
+                    const option = document.createElement('option');
+                    option.value = role;
+                    option.textContent = role;
+                    posSelect.appendChild(option);
+                });
+            }
+
+            // Create dropdowns for each group
+            for (const [groupName, columns] of Object.entries(columnGroups)) {
+                const groupDiv = document.createElement('div');
+                groupDiv.innerHTML = `
+                    <select id="${groupName}Filter">
+                        <option value="">Select ${groupName} Column</option>
+                    </select>
+                    <input type="text" id="${groupName}Value" placeholder="Value" style="display: none;">
+                    <select id="${groupName}Operator" style="display: none;">
+                        <option value="=">=</option>
+                        <option value=">">></option>
+                        <option value="<"><</option>
+                    </select>
+                `;
+                filtersDiv.appendChild(groupDiv);
+
+                const columnSelect = document.getElementById(`${groupName}Filter`);
+                const valueInput = document.getElementById(`${groupName}Value`);
+                const operatorSelect = document.getElementById(`${groupName}Operator`);
+
+                // Populate dropdown with columns in the group
+                columns.forEach(column => {
+                    const option = document.createElement('option');
+                    option.value = headers.indexOf(column);
+                    option.textContent = column;
+                    columnSelect.appendChild(option);
+                });
+
+                columnSelect.addEventListener('change', () => {
+                    if (columnSelect.value) {
+                        valueInput.style.display = 'inline-block';
+                        operatorSelect.style.display = 'inline-block';
+                    } else {
+                        valueInput.style.display = 'none';
+                        operatorSelect.style.display = 'none';
+                    }
+                });
+            }
+
+            // Add Search and Reset buttons
+            const buttonDiv = document.createElement('div');
+            buttonDiv.innerHTML = `
+                <button id="searchButton">Search</button>
+                <button id="resetButton">Reset</button>
+            `;
+            filtersDiv.appendChild(buttonDiv);
+
+            document.getElementById('searchButton').addEventListener('click', () => filterTable());
+            document.getElementById('resetButton').addEventListener('click', () => resetFilters());
+        }
+
+        function removeFilter(button) {
+            button.parentElement.remove();
+            filterTable();
+        }
+
+        // Toggle which column group is visible
+        function toggleColumnGroup(groupName) {
+            document.querySelectorAll('.column-button').forEach(button => {
+                if (button.dataset.group === groupName) {
+                    button.classList.add('active');
+                } else {
+                    button.classList.remove('active');
+                }
+            });
+
+            if (groupName === 'all') {
+                visibleColumns = [...allColumns];
+            } else if (columnGroups[groupName]) {
+                visibleColumns = [...columnGroups['basic']];
+                
+                if (groupName !== 'basic') {
+                    columnGroups[groupName].forEach(col => {
+                        if (!visibleColumns.includes(col)) {
+                            visibleColumns.push(col);
+                        }
+                    });
+                }
+            }
+            
+            generateTableWithVisibleColumns();
+        }
+
+        function filterTable() {
+            const filters = [];
+
+
+            if (visibleColumns.length > 0) {
+                generateTableWithVisibleColumns();
+            } else {
+                generateTable(getPaginatedData());
+            }
+
+            const seasonButton = document.getElementById('seasonButton');
+            if (seasonButton) {
+                const season = seasonButton.textContent.split(': ')[1];
+                filters.push({ index: 0, value: season, operator: '=' });
+            }
+
+            ['Player', 'Squad', 'Comp', 'Nation'].forEach(header => {
+                const input = document.getElementById(`${header}Filter`);
+                if (input && input.value) {
+                    const index = tableData[0].indexOf(header);
+                    if (index !== -1) {
+                        filters.push({ index, value: input.value.toLowerCase(), operator: 'includes' });
+                    }
+                }
+            });
+
+            const posSelect = document.getElementById('posFilter');
+            if (posSelect && posSelect.value) {
+                const index = tableData[0].indexOf('Best Role');
+                if (index !== -1) {
+                    filters.push({ index, value: posSelect.value, operator: '=' });
+                }
+            }
+
+            const columnGroups = ['Shooting', 'Discipline', 'Passing', 'Defensive Actions', 'Dribbling'];
+            columnGroups.forEach(group => {
+                const columnSelect = document.getElementById(`${group}Filter`);
+                const valueInput = document.getElementById(`${group}Value`);
+                const operatorSelect = document.getElementById(`${group}Operator`);
+
+                if (columnSelect && columnSelect.value && valueInput && valueInput.value) {
+                    const index = parseInt(columnSelect.value);
+                    if (!isNaN(index)) {
+                        filters.push({
+                            index,
+                            value: parseFloat(valueInput.value) || valueInput.value,
+                            operator: operatorSelect.value
+                        });
+                    }
+                }
+            });
+
+            // Apply filters
+            let filteredData = tableData.slice(1).filter(row => {
+                return filters.every(filter => {
+                    const cellValue = row[filter.index];
+                    const filterValue = filter.value;
+
+                    if (filter.operator === 'includes') {
+                        return cellValue.toString().toLowerCase().includes(filterValue.toString().toLowerCase());
+                    } else if (filter.operator === '=') {
+                        return cellValue == filterValue;
+                    } else if (filter.operator === '>') {
+                        return parseFloat(cellValue) > parseFloat(filterValue);
+                    } else if (filter.operator === '<') {
+                        return parseFloat(cellValue) < parseFloat(filterValue);
+                    }
+                    return true;
+                });
+            });
+
+            tableData = [tableData[0], ...filteredData];
+            currentPage = 1; 
+            generateTable(getPaginatedData());
+            updatePagination();
+        }
+        
+        function resetFilters() {
+            document.querySelectorAll('#filters input').forEach(input => {
+                if (input.type === 'text') {
+                    input.value = ''; 
+                    
+                    const id = input.id;
+                    if (!id.endsWith('Filter') || 
+                        (id !== 'PlayerFilter' && id !== 'SquadFilter' && 
+                        id !== 'CompFilter' && id !== 'NationFilter')) {
+                        input.style.display = 'none'; 
+                    }
+                }
+            });
+            
+            document.querySelectorAll('#filters select').forEach(select => {
+                select.value = ''; 
+                if (select.id.endsWith('Operator')) {
+                    select.style.display = 'none'; 
+                }
+            });
+
+            activeFilters = [];
+            updateActiveFiltersUI();
+
+            tableData = [...originalTableData]; 
+            currentPage = 1;
+            
+            if (visibleColumns.length > 0) {
+                generateTableWithVisibleColumns();
+            } else {
+                generateTable(getPaginatedData());
+            }
+            
+            updatePagination();
+        }
+
+        function getPaginatedData() {
+            const start = (currentPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            return [tableData[0], ...tableData.slice(1).slice(start, end)];
+        }
+
+        function updatePagination() {
+            const totalPages = Math.ceil((tableData.length - 1) / rowsPerPage);
+            document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+            document.getElementById('prevPage').disabled = currentPage === 1;
+            document.getElementById('nextPage').disabled = currentPage === totalPages;
+        }
+
+        document.getElementById('prevPage').addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                generateTable(getPaginatedData());
+                updatePagination();
+            if (visibleColumns.length > 0) {
+                generateTableWithVisibleColumns();
+            } else {
+                generateTable(getPaginatedData());
+            }
+            }
+        });
+
+        document.getElementById('nextPage').addEventListener('click', () => {
+            const totalPages = Math.ceil((tableData.length - 1) / rowsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                generateTable(getPaginatedData());
+                updatePagination();
+            if (visibleColumns.length > 0) {
+                generateTableWithVisibleColumns();
+            } else {
+                generateTable(getPaginatedData());
+            }
+            }
+        });
+    </script>
+</body>
+</html>
