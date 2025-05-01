@@ -39,7 +39,6 @@ const positionToGroup = {
     'LW': 'Attackers',
     'RW': 'Attackers'
 };
-s
 let allColumns = [];
 let selectedColumns = {};
 
